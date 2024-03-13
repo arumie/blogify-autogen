@@ -1,66 +1,64 @@
-import os
-import arxiv
-from openai import OpenAI
-import requests
 import io
-import psycopg2
+import os
 
+import arxiv
+from diskcache import Cache
+import requests
+from autogen.agentchat.contrib.img_utils import _to_pil, get_image_data
+from openai import OpenAI
+from pydantic import BaseModel
 from PyPDF2 import PdfReader
 from typing_extensions import Annotated
-from pydantic import BaseModel
-from diskcache import Cache
-from autogen.agentchat.contrib.img_utils import get_image_data, _to_pil
+
+# class BlogSectionModel(BaseModel):
+#     sectionTitle: Annotated[str, "Title of this section of the blog"]
+#     sectionContent: Annotated[str, "Content of this section of the blog"]
 
 
-class BlogSectionModel(BaseModel):
-    sectionTitle: Annotated[str, "Title of this section of the blog"]
-    sectionContent: Annotated[str, "Content of this section of the blog"]
+# class BlogModel(BaseModel):
+#     title: Annotated[str, "Title of the blog"]
+#     imageUrl: Annotated[str, "Url for image of the blog"]
+#     sections: Annotated[
+#         list[BlogSectionModel], f"List of blog sections with title and content"
+#     ]
 
 
-class BlogModel(BaseModel):
-    title: Annotated[str, "Title of the blog"]
-    imageUrl: Annotated[str, "Url for image of the blog"]
-    sections: Annotated[
-        list[BlogSectionModel], f"List of blog sections with title and content"
-    ]
+# def save_blog_to_db(
+#     host: str, database: str, user: str, password: str, blog: BlogModel
+# ):
+#     conn = psycopg2.connect(
+#         host=host,
+#         database=database,
+#         user=user,
+#         password=password,
+#     )
+#     sql = """INSERT INTO blogs(blog_json)
+#             VALUES(%s) RETURNING vendor_id;"""
 
+#     vendor_id = None
 
-def save_blog_to_db(
-    host: str, database: str, user: str, password: str, blog: BlogModel
-):
-    conn = psycopg2.connect(
-        host=host,
-        database=database,
-        user=user,
-        password=password,
-    )
-    sql = """INSERT INTO blogs(blog_json)
-            VALUES(%s) RETURNING vendor_id;"""
+#     try:
+#         with psycopg2.connect(
+#             host=host,
+#             database=database,
+#             user=user,
+#             password=password,
+#         ) as conn:
+#             with conn.cursor() as cur:
+#                 # execute the INSERT statement
+#                 cur.execute(sql, (blog.json(),))
 
-    vendor_id = None
+#                 # get the generated id back
+#                 rows = cur.fetchone()
+#                 if rows:
+#                     vendor_id = rows[0]
 
-    try:
-        with psycopg2.connect(
-            host=host,
-            database=database,
-            user=user,
-            password=password,
-        ) as conn:
-            with conn.cursor() as cur:
-                # execute the INSERT statement
-                cur.execute(sql, (blog.json(),))
-
-                # get the generated id back
-                rows = cur.fetchone()
-                if rows:
-                    vendor_id = rows[0]
-
-                # commit the changes to the database
-                conn.commit()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        return vendor_id
+#                 # commit the changes to the database
+#                 conn.commit()
+#     except (Exception, psycopg2.DatabaseError) as error:
+#         print(error)
+#     finally:
+#         return vendor_id
 
 
 def save_blog_to_file(
@@ -78,16 +76,13 @@ def save_blog_to_file(
             with open(os.path.join(path, file), "a") as f:
                 f.write(blogJson)
         return "Succesfully saved blog json to file"
-    except (Exception) as error:
+    except Exception as error:
         return "Failed to save blog json to file"
 
+
 def generate_image(
-    client: OpenAI,
-    model: str,
-    prompt: str,
-    size: str,
-    quality: str,
-    n: int) -> str:
+    client: OpenAI, model: str, prompt: str, size: str, quality: str, n: int
+) -> str:
     try:
         cache = Cache(".cache/")  # Create a cache directory
         key = (model, prompt, size, quality, n)
@@ -105,9 +100,9 @@ def generate_image(
             image_url = response.data[0].url
             cache[key] = image_url
         return image_url
-    except (Exception, psycopg2.DatabaseError) as error:
-        return error.pgerror
-        
+    except Exception as error:
+        return error.__str__
+
 
 def create_image_and_save(
     arxiv_id: str,
@@ -144,7 +139,9 @@ def create_image_and_save(
     """
     # Function implementation...
     try:
-        img_url = generate_image(client=client, model=model, prompt=prompt, size=size, quality=quality, n=n)
+        img_url = generate_image(
+            client=client, model=model, prompt=prompt, size=size, quality=quality, n=n
+        )
         img_data = get_image_data(img_url)
         img = _to_pil(img_data)
         file = f"{image_file_name}"
@@ -154,8 +151,8 @@ def create_image_and_save(
         img.save(os.path.join(path, file))
 
         return img_url
-    except:
-        return "Failed to generate and save image"
+    except Exception as error:
+        return error.__str__
 
 
 def save_md_file(

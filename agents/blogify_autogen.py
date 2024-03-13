@@ -21,7 +21,7 @@ def blogify_arxiv(input: BlogInput) -> BlogOutput:
     if "OPENAI_API_KEY" in os.environ:
         apiKey = os.environ["OPENAI_API_KEY"]
     else:
-        apiKey = input.openaiApiKey
+        apiKey = input.openaiApiKey.get_secret_value()
 
     config_list = [
         {
@@ -31,12 +31,12 @@ def blogify_arxiv(input: BlogInput) -> BlogOutput:
         },
         {
             "model": "gpt-4",
-            "api_key": os.environ["OPENAI_API_KEY"],
+            "api_key": apiKey,
             "tags": ["chat", "gpt4"],
         },
         {
             "model": "dall-e-3",
-            "api_key": os.environ["OPENAI_API_KEY"],
+            "api_key": apiKey,
             "tags": ["images", "dalle"],
         },
     ]
@@ -77,7 +77,8 @@ def blogify_arxiv(input: BlogInput) -> BlogOutput:
         arxiv_id: Annotated[str, "ID of the arXiv article"],
         prompt: Annotated[str, "Prompt used to generate image."],
     ) -> Annotated[str, "Resulting image URL"]:
-        client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+        apiKey = os.environ["OPENAI_API_KEY"] if "OPENAI_API_KEY" in os.environ else input.openaiApiKey.get_secret_value()
+        client = OpenAI(api_key=apiKey)
         return create_image_and_save(
             arxiv_id=arxiv_id,
             image_file_name=f"image-{arxiv_id}.jpg",
@@ -120,8 +121,8 @@ def blogify_arxiv(input: BlogInput) -> BlogOutput:
             cache=cache,
         )
 
-        # Read from file with name output-<arxiv_id>/blog-<arxiv_id>.md
-        arxiv_id = input.link.split("/")[-1]
-        with open(f"./_output/output-{arxiv_id}/blog-{arxiv_id}.md", "r") as file:
-            content = file.read()
-        return BlogOutput(markdown=content)
+    # Read from file with name output-<arxiv_id>/blog-<arxiv_id>.md
+    arxiv_id = input.link.split("/")[-1]
+    with open(f"./_output/output-{arxiv_id}/blog-{arxiv_id}.md", "r") as file:
+        content = file.read()
+    return BlogOutput(markdown=content)

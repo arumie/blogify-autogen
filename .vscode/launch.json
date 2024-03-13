@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "name": "Run Autogen",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "app.py"
+        },
+        {
+            "name": "Run API",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "main:app",
+                "--reload"
+            ],
+            "jinja": true
+        }
+    ]
+}

@@ -6,7 +6,7 @@ Created for Trifork Hackerdays 2024 by David Carlos Zachariae
 
 ## Prerequisites
 
-Python 3.x
+Python 3.11.x
 
 ## Installing
 
@@ -18,10 +18,10 @@ pip install -r requirements.txt
 
 ## Usage
 
-Run using uvicorn
+Run using FastAPI CLI
 
 ```bash
-uvicorn main:app --reload
+fastapi dev main.py
 ```
 
 API will be available at http://127.0.0.1:8000/docs

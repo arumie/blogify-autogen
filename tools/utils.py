@@ -145,7 +145,7 @@ def create_image_and_save(
         img_data = get_image_data(img_url)
         img = _to_pil(img_data)
         file = f"{image_file_name}"
-        path = f"./output-{arxiv_id}"
+        path = f"./_output/output-{arxiv_id}"
         if not os.path.exists(path):
             os.makedirs(path)
         img.save(os.path.join(path, file))

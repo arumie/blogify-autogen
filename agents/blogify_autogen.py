@@ -25,14 +25,9 @@ def blogify_arxiv(input: BlogInput) -> BlogOutput:
 
     config_list = [
         {
-            "model": "gpt-4-0125-preview",
+            "model": "gpt-4o",
             "api_key": apiKey,
-            "tags": ["chat", "gpt-4-turbo"],
-        },
-        {
-            "model": "gpt-4",
-            "api_key": apiKey,
-            "tags": ["chat", "gpt4"],
+            "tags": ["chat", "gpt-4"],
         },
         {
             "model": "dall-e-3",
@@ -112,8 +107,7 @@ def blogify_arxiv(input: BlogInput) -> BlogOutput:
         user_proxy.initiate_chat(
             arxiv_blogifier_agent,
             message=f""""
-                Create a blog from the the following article: '{input.link}'. 
-                Create a hype title for the blog. 
+                Create a blog from the the following article: '{input.link}'.
                 Create an image for the blog using the title as a prompt and include in the blog via image url. 
                 Include the original authors and link to arXiv article in the blog.
                 Store the resulting blog as Markdown in a file.
